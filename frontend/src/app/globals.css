@@ -1,0 +1,306 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --slate-950: #f8fafc;
+  --slate-900: #ffffff;
+  --slate-850: #f1f5f9;
+  --slate-800: #e2e8f0;
+  --slate-700: #cbd5e1;
+  --slate-600: #64748b;
+  --slate-500: #475569;
+  --slate-400: #334155;
+  --slate-300: #1e293b;
+  --slate-200: #0f172a;
+  --slate-100: #030712;
+
+  --text-white-override: #030712;
+
+  --success-bg: #d1fae5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+
+  --danger-bg: #fee2e2;
+  --danger-border: #fca5a5;
+  --danger-text: #991b1b;
+
+  --warning-bg: #fef3c7;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+
+  --info-bg: #e0e7ff;
+  --info-border: #c7d2fe;
+  --info-text: #3730a3;
+
+  --chart-grid: #cbd5e1;
+  --tooltip-text: #0f172a;
+}
+
+.dark {
+  --background: #090d16;
+  --foreground: #f8fafc;
+
+  --slate-950: #090d16;
+  --slate-900: #0f172a;
+  --slate-850: #1e293b;
+  --slate-800: #334155;
+  --slate-700: #475569;
+  --slate-600: #64748b;
+  --slate-500: #94a3b8;
+  --slate-400: #cbd5e1;
+  --slate-300: #e2e8f0;
+  --slate-200: #f1f5f9;
+  --slate-100: #f8fafc;
+
+  --text-white-override: #ffffff;
+
+  --success-bg: rgba(6, 95, 70, 0.2);
+  --success-border: rgba(6, 95, 70, 0.5);
+  --success-text: #34d399;
+
+  --danger-bg: rgba(153, 27, 27, 0.2);
+  --danger-border: rgba(153, 27, 27, 0.5);
+  --danger-text: #f87171;
+
+  --warning-bg: rgba(146, 64, 14, 0.2);
+  --warning-border: rgba(146, 64, 14, 0.5);
+  --warning-text: #fbbf24;
+
+  --info-bg: rgba(55, 48, 163, 0.2);
+  --info-border: rgba(55, 48, 163, 0.5);
+  --info-text: #818cf8;
+
+  --chart-grid: #334155;
+  --tooltip-text: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --color-slate-950: var(--slate-950);
+  --color-slate-900: var(--slate-900);
+  --color-slate-850: var(--slate-850);
+  --color-slate-800: var(--slate-800);
+  --color-slate-700: var(--slate-700);
+  --color-slate-655: var(--slate-600);
+  --color-slate-600: var(--slate-600);
+  --color-slate-500: var(--slate-500);
+  
+  --color-slate-400: var(--slate-400);
+  --color-slate-300: var(--slate-300);
+  --color-slate-200: var(--slate-200);
+  --color-slate-100: var(--slate-100);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Override dark styles for layout headings and tables */
+h1, h2, h3, h4, h5, h6, th, .text-white {
+  color: var(--text-white-override) !important;
+}
+
+/* Custom class overrides to ensure high contrast light theme backgrounds */
+.bg-slate-950 {
+  background-color: var(--slate-950) !important;
+}
+
+.bg-slate-900, .bg-slate-900\/60 {
+  background-color: var(--slate-900) !important;
+  border-color: var(--slate-800) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.bg-slate-850 {
+  background-color: var(--slate-850) !important;
+}
+
+.border-slate-800, .border-slate-850 {
+  border-color: var(--slate-800) !important;
+}
+
+.text-slate-100 {
+  color: var(--slate-100) !important;
+}
+
+.text-slate-200 {
+  color: var(--slate-200) !important;
+}
+
+.text-slate-300 {
+  color: var(--slate-300) !important;
+}
+
+.text-slate-400 {
+  color: var(--slate-400) !important;
+}
+
+.text-slate-500 {
+  color: var(--slate-500) !important;
+}
+
+.text-slate-600 {
+  color: var(--slate-600) !important;
+}
+
+/* Keep button texts white on indigo backgrounds */
+button.bg-indigo-600, 
+a.bg-indigo-600, 
+.bg-indigo-600, 
+button.bg-indigo-600 *, 
+a.bg-indigo-600 *,
+.bg-indigo-600 * {
+  color: #ffffff !important;
+}
+
+/* Keep success badge and green/red cards text visible */
+.bg-emerald-950\/45, .bg-emerald-950\/30 {
+  background-color: var(--success-bg) !important;
+  border-color: var(--success-border) !important;
+  color: var(--success-text) !important;
+}
+
+.bg-emerald-950\/45 *, .bg-emerald-950\/30 * {
+  color: var(--success-text) !important;
+}
+
+.bg-red-950\/45, .bg-red-950\/30 {
+  background-color: var(--danger-bg) !important;
+  border-color: var(--danger-border) !important;
+  color: var(--danger-text) !important;
+}
+
+.bg-red-950\/45 *, .bg-red-950\/30 * {
+  color: var(--danger-text) !important;
+}
+
+.bg-amber-950\/45, .bg-amber-950\/30 {
+  background-color: var(--warning-bg) !important;
+  border-color: var(--warning-border) !important;
+  color: var(--warning-text) !important;
+}
+
+.bg-amber-950\/45 *, .bg-amber-950\/30 * {
+  color: var(--warning-text) !important;
+}
+
+.bg-indigo-950\/40 {
+  background-color: var(--info-bg) !important;
+  border-color: var(--info-border) !important;
+  color: var(--info-text) !important;
+}
+
+.bg-indigo-950\/40 * {
+  color: var(--info-text) !important;
+}
+
+/* Recharts grid line adjustments for light theme visibility */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--chart-grid) !important;
+}
+
+/* Adjust standard tooltip text colors inside graphs */
+.recharts-tooltip-wrapper * {
+  color: var(--tooltip-text) !important;
+}
+
+@media print {
+  /* Force dark text and light backgrounds for print, overriding dark mode active states */
+  :root, .dark, [data-theme="dark"] {
+    --text-white-override: #030712 !important;
+    --slate-950: #ffffff !important;
+    --slate-900: #f8fafc !important;
+    --slate-850: #f1f5f9 !important;
+    --slate-800: #e2e8f0 !important;
+    --slate-700: #cbd5e1 !important;
+    --slate-600: #64748b !important;
+    --slate-500: #475569 !important;
+    --slate-400: #334155 !important;
+    --slate-300: #1e293b !important;
+    --slate-200: #0f172a !important;
+    --slate-100: #030712 !important;
+    
+    --foreground: #0f172a !important;
+    --background: #ffffff !important;
+    
+    --success-bg: #d1fae5 !important;
+    --success-border: #a7f3d0 !important;
+    --success-text: #065f46 !important;
+    
+    --danger-bg: #fee2e2 !important;
+    --danger-border: #fca5a5 !important;
+    --danger-text: #991b1b !important;
+    
+    --warning-bg: #fef3c7 !important;
+    --warning-border: #fde68a !important;
+    --warning-text: #92400e !important;
+    
+    --info-bg: #e0e7ff !important;
+    --info-border: #c7d2fe !important;
+    --info-text: #3730a3 !important;
+
+    --chart-grid: #cbd5e1 !important;
+    --tooltip-text: #0f172a !important;
+  }
+
+  aside, 
+  header, 
+  .no-print, 
+  button, 
+  a,
+  nav {
+    display: none !important;
+  }
+  
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .md\:pl-64 {
+    padding-left: 0 !important;
+  }
+  
+  body, html {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    background: none !important;
+  }
+  
+  /* Ensure borders and cards print cleanly */
+  .border, 
+  .border-slate-800, 
+  .border-slate-850,
+  .border-indigo-900\/40 {
+    border-color: #cbd5e1 !important;
+    border-width: 1px !important;
+  }
+  
+  .bg-slate-900, 
+  .bg-slate-900\/60,
+  .bg-gradient-to-r {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+}
+
+.print-only {
+  display: none !important;
+}
+
