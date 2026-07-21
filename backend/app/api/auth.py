@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from sqlalchemy import func
+from datetime import datetime, timedelta
+import random
+import secrets
 
 from app.api import deps
 from app.core import security
@@ -18,12 +21,15 @@ def register(
     user_in: UserCreate,
     request: Request
 ):
-    """Register a new user. The first registered user automatically becomes the Admin."""
-    user = db.query(User).filter(User.email == user_in.email).first()
+    """Register a new user with case-insensitive duplicate email check."""
+    clean_email = user_in.email.strip().lower()
+    
+    # Case-insensitive duplicate check
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
     if user:
         raise HTTPException(
-            status_code=400,
-            detail="A user with this email already exists in the system."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email address is already registered. Please sign in instead or use a different email address."
         )
     
     # Make first user admin for system initialization
@@ -32,9 +38,9 @@ def register(
 
     hashed_password = security.get_password_hash(user_in.password)
     db_user = User(
-        email=user_in.email,
+        email=clean_email,
         hashed_password=hashed_password,
-        full_name=user_in.full_name,
+        full_name=user_in.full_name.strip(),
         role=role
     )
     db.add(db_user)
@@ -59,8 +65,9 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     request: Request
 ):
-    """Standard OAuth2 password flow. Expects username (email) and password."""
-    user = db.query(User).filter(User.email == form_data.username).first()
+    """Standard OAuth2 password flow with normalized email lookup."""
+    clean_email = form_data.username.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -93,24 +100,20 @@ def forgot_password(
     payload: ForgotPasswordRequest,
     request: Request
 ):
-    """Initiate password recovery. Generates token and prints a simulated email reset link."""
-    import secrets
-    from datetime import datetime, timedelta
-    
-    user = db.query(User).filter(User.email == payload.email).first()
+    """Initiate password recovery. Generates a 6-digit OTP code valid for 10 minutes."""
+    clean_email = payload.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
     if not user:
-        return {"message": "If the email is registered in our system, a password reset link has been generated."}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this email address. Please check your email or register."
+        )
         
-    token = secrets.token_hex(16)
-    user.reset_token = token
-    user.reset_token_expires_at = datetime.utcnow() + timedelta(hours=1)
+    # Generate 6-digit numeric OTP code
+    otp_code = f"{random.randint(100000, 999999)}"
+    user.otp_code = otp_code
+    user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
     db.commit()
-    
-    reset_link = f"http://localhost:3000/reset-password?token={token}"
-    print(f"\n=======================================================")
-    print(f"PASSWORD RESET REQUEST FOR: {user.email}")
-    print(f"RESET LINK: {reset_link}")
-    print(f"=======================================================\n")
     
     # Log audit event
     log_event(
@@ -118,12 +121,14 @@ def forgot_password(
         action="FORGOT_PASSWORD_REQUEST",
         user_id=user.id,
         request=request,
-        details={"email": user.email}
+        details={"email": user.email, "otp_generated": True}
     )
     
     return {
-        "message": "If the email is registered in our system, a password reset link has been generated.",
-        "debug_reset_link": reset_link
+        "message": f"A 6-digit OTP has been sent to {clean_email}.",
+        "otp_code": otp_code,
+        "email": clean_email,
+        "expires_in": "10 minutes"
     }
 
 @router.post("/reset-password")
@@ -133,23 +138,42 @@ def reset_password(
     payload: ResetPasswordRequest,
     request: Request
 ):
-    """Reset password using a valid, non-expired recovery token."""
-    from datetime import datetime
+    """Reset password using 6-digit OTP code or reset token."""
+    user = None
     
-    user = db.query(User).filter(
-        User.reset_token == payload.token,
-        User.reset_token_expires_at > datetime.utcnow()
-    ).first()
-    
-    if not user:
+    if payload.otp_code and payload.email:
+        clean_email = payload.email.strip().lower()
+        user = db.query(User).filter(
+            func.lower(User.email) == clean_email,
+            User.otp_code == payload.otp_code.strip(),
+            User.otp_expires_at > datetime.utcnow()
+        ).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP code. Please verify the code or request a new OTP."
+            )
+    elif payload.token:
+        user = db.query(User).filter(
+            User.reset_token == payload.token,
+            User.reset_token_expires_at > datetime.utcnow()
+        ).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The password reset token is invalid or has expired."
+            )
+    else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The password reset token is invalid or has expired."
+            detail="Please provide an OTP code or password reset token."
         )
         
     user.hashed_password = security.get_password_hash(payload.password)
     user.reset_token = None
     user.reset_token_expires_at = None
+    user.otp_code = None
+    user.otp_expires_at = None
     db.commit()
     
     # Log audit event
@@ -161,4 +185,5 @@ def reset_password(
         details={"email": user.email}
     )
     
-    return {"message": "Password has been successfully updated."}
+    return {"message": "Password has been successfully updated. You can now log in."}
+

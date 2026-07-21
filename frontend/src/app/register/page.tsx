@@ -45,8 +45,25 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div className="p-3.5 mb-6 text-sm text-red-400 rounded-lg bg-red-950/30 border border-red-900/50">
-            {error}
+          <div className="p-4 mb-6 text-sm rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200">
+            <p className="font-semibold text-amber-300 mb-1">Registration Alert</p>
+            <p>{error}</p>
+            {error.toLowerCase().includes("already registered") && (
+              <div className="mt-3 flex space-x-3 text-xs">
+                <Link
+                  href="/login"
+                  className="px-3 py-1.5 rounded-lg bg-amber-800/60 hover:bg-amber-700 text-white font-medium transition-colors"
+                >
+                  Sign In Now →
+                </Link>
+                <Link
+                  href="/forgot-password"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -63,9 +80,10 @@ export default function RegisterPage() {
               <input
                 type="text"
                 required
+                autoComplete="off"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="Enter your full name"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
               />
             </div>
@@ -82,9 +100,10 @@ export default function RegisterPage() {
               <input
                 type="email"
                 required
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="Enter email address"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
               />
             </div>
@@ -101,9 +120,10 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 6 characters"
+                placeholder="Enter password"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
               />
             </div>

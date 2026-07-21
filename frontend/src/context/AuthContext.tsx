@@ -63,9 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
       const params = new URLSearchParams();
-      params.append("username", email);
+      params.append("username", cleanEmail);
       params.append("password", password);
 
       const response = await api.post<{ access_token: string; token_type: string }>("/auth/token", params, {
@@ -91,14 +92,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (email: string, fullName: string, password: string) => {
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
       await api.post("/auth/register", {
-        email,
-        full_name: fullName,
+        email: cleanEmail,
+        full_name: fullName.trim(),
         password,
       });
       // After registration, auto login
-      await login(email, password);
+      await login(cleanEmail, password);
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || "Registration failed. Try again.");
     } finally {

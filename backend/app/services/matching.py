@@ -87,3 +87,66 @@ def match_loans(db: Session, profile: CustomerProfile) -> List[Dict[str, Any]]:
         item.pop("score", None)
         
     return matched_results
+
+def evaluate_ineligibility_reasons(db: Session, profile: CustomerProfile) -> Dict[str, Any]:
+    """Analyze why a customer profile failed to match loan products and generate improvement steps."""
+    products = db.query(LoanProduct).all()
+    reasons = []
+    suggestions = []
+
+    if not products:
+        return {
+            "reasons": ["No loan products are currently seeded in the bank catalog."],
+            "suggestions": ["Contact bank support or refresh catalog."]
+        }
+
+    # 1. Credit Score Analysis
+    min_credit = min(p.min_credit_score for p in products)
+    if profile.credit_score < min_credit:
+        reasons.append(
+            f"CIBIL Credit Score of {profile.credit_score} is below the minimum lender requirement of {min_credit}."
+        )
+        suggestions.append(
+            f"Focus on boosting your CIBIL score from {profile.credit_score} to at least {min_credit}+ by paying bills on time, keeping credit card balances below 30%, and avoiding new loan inquiries."
+        )
+
+    # 2. Income Analysis
+    min_income = min(p.min_income_requirement for p in products)
+    if profile.monthly_income < min_income:
+        reasons.append(
+            f"Monthly income of ₹{profile.monthly_income:,.2f} is below the minimum eligibility threshold of ₹{min_income:,.2f}."
+        )
+        suggestions.append(
+            f"Consider adding a co-applicant (such as a spouse or parent) with stable income to satisfy minimum bank income requirements."
+        )
+
+    # 3. Requested Amount Analysis
+    max_amount = max(p.max_loan_amount for p in products)
+    if profile.required_loan_amount > max_amount:
+        reasons.append(
+            f"Requested loan amount of ₹{profile.required_loan_amount:,.2f} exceeds the maximum bank limit of ₹{max_amount:,.2f}."
+        )
+        suggestions.append(
+            f"Reduce your requested loan amount to under ₹{max_amount:,.2f} or split your funding requirement across multiple loan products."
+        )
+
+    # 4. DTI & Debt Load Analysis
+    base_dti = ((profile.monthly_expenses + profile.existing_emis) / profile.monthly_income * 100) if profile.monthly_income > 0 else 100
+    if base_dti > 45.0:
+        reasons.append(
+            f"Current Debt-to-Income (DTI) ratio is high at {base_dti:.1f}% (monthly obligations: ₹{profile.monthly_expenses + profile.existing_emis:,.2f} out of ₹{profile.monthly_income:,.2f} income)."
+        )
+        suggestions.append(
+            f"Pay off active short-term retail EMIs or reduce non-essential expenses to bring your DTI ratio below 40% before applying."
+        )
+
+    # Fallback if no specific failure triggered
+    if not reasons:
+        reasons.append("Preferred loan tenure does not fit within bank offer ranges or risk limits.")
+        suggestions.append("Adjust your preferred tenure (e.g. 24, 36, 48, or 60 months) to view matching options.")
+
+    return {
+        "reasons": reasons,
+        "suggestions": suggestions
+    }
+

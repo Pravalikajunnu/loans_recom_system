@@ -16,26 +16,54 @@ else:
 def get_mock_recommendation(profile: Dict[str, Any], matched_loans: List[Dict[str, Any]], all_loans: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Fallback generator to return a realistic JSON payload when Gemini API is unavailable."""
     if not matched_loans:
+        reasons = []
+        suggestions = []
+        
+        income = profile.get("monthly_income", 0.0)
+        expenses = profile.get("monthly_expenses", 0.0)
+        emis = profile.get("existing_emis", 0.0)
+        score = profile.get("credit_score", 0)
+        required_amt = profile.get("required_loan_amount", 0.0)
+        
+        if all_loans:
+            min_credit = min(l.min_credit_score for l in all_loans)
+            max_amount = max(l.max_loan_amount for l in all_loans)
+            min_income = min(l.min_income_requirement for l in all_loans)
+            
+            if score < min_credit:
+                reasons.append(f"CIBIL Credit Score of {score} is below the minimum lender requirement of {min_credit}.")
+                suggestions.append(f"Focus on boosting your CIBIL credit score from {score} to at least {min_credit}+ by making timely payments and keeping card utilization below 30%.")
+                
+            if income < min_income:
+                reasons.append(f"Monthly income of ₹{income:,.2f} is below the minimum bank income requirement of ₹{min_income:,.2f}.")
+                suggestions.append(f"Add a co-applicant (such as a spouse or parent) with verified income to satisfy minimum bank requirements.")
+                
+            if required_amt > max_amount:
+                reasons.append(f"Requested loan amount of ₹{required_amt:,.2f} exceeds the maximum bank product limit of ₹{max_amount:,.2f}.")
+                suggestions.append(f"Lower your requested loan amount to under ₹{max_amount:,.2f} or split the requirement into multiple loans.")
+                
+        dti = ((expenses + emis) / income * 100) if income > 0 else 100
+        if dti > 45.0:
+            reasons.append(f"Current Debt-to-Income (DTI) ratio is high at {dti:.1f}% (monthly obligations: ₹{expenses + emis:,.2f} out of ₹{income:,.2f} income).")
+            suggestions.append(f"Pay off small active retail EMIs or trim monthly expenses to reduce your DTI ratio below 40% before reapplying.")
+            
+        if not reasons:
+            reasons.append("Preferred loan tenure does not fit within bank offer ranges or credit risk limits.")
+            suggestions.append("Try adjusting your loan tenure (e.g. 24, 36, 48, or 60 months) to find eligible offers.")
+
         return {
             "best_loan": None,
             "alternatives": [],
             "pros_and_cons": {
-                "pros": ["No loan debt incurred."],
-                "cons": ["Cannot obtain the required funding for " + profile.get("loan_purpose", "needs") + "."]
+                "pros": ["No debt liability incurred."],
+                "cons": ["Unable to obtain required funding for " + profile.get("loan_purpose", "loan") + " at this time."]
             },
             "risk_assessment": {
                 "level": "High",
-                "explanation": "Customer is currently ineligible for the requested loan amount. Adding new liabilities poses severe default risks."
+                "explanation": f"Profile poses high risk to lenders due to low CIBIL score ({score}) or elevated DTI ratio ({dti:.1f}%)."
             },
-            "eligibility_factors": [
-                "Credit score is below the threshold or Debt-to-Income (DTI) ratio is too high.",
-                "Monthly expenses leave insufficient disposable income to cover estimated EMIs."
-            ],
-            "improvement_suggestions": [
-                "Work on improving your credit score by paying off existing small debts and making timely payments.",
-                "Reduce non-essential monthly expenses to increase your disposable income.",
-                "Consider applying for a lower loan amount or extending the tenure to reduce the monthly EMI load."
-            ]
+            "eligibility_factors": reasons,
+            "improvement_suggestions": suggestions
         }
 
     # Extract primary recommendation

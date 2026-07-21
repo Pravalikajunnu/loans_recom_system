@@ -168,12 +168,87 @@ export default function RecommendPage() {
         )}
 
         {!best ? (
-          <div className="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
-            <AlertTriangle className="w-10 h-10 text-slate-500 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-white">No Offers Found</h3>
-            <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
-              We couldn't generate an AI recommendation because you are not currently eligible for any seeded products. Please review the Dashboard to identify factors blocking eligibility.
-            </p>
+          <div className="space-y-8">
+            {/* Customer Profile Summary Header */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Customer Name</span>
+                <span className="text-sm font-bold text-slate-100 block mt-1">{profile.full_name || user?.full_name}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">CIBIL Score</span>
+                <span className="text-sm font-bold text-amber-400 block mt-1">{profile.credit_score}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Monthly Income</span>
+                <span className="text-sm font-bold text-slate-100 block mt-1">₹{profile.monthly_income.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Requested Loan</span>
+                <span className="text-sm font-bold text-slate-100 block mt-1">₹{profile.required_loan_amount.toLocaleString()} ({profile.preferred_loan_tenure_months} mo)</span>
+              </div>
+            </div>
+
+            {/* Ineligibility Warning Hero Banner */}
+            <div className="p-6 rounded-2xl bg-amber-950/30 border border-amber-900/50">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-amber-900/40 text-amber-400 border border-amber-800/50 flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-amber-200">No Eligible Bank Products Matched Your Current Profile</h2>
+                  <p className="text-xs text-amber-300/80 mt-1 leading-relaxed">
+                    Based on current bank criteria, your application was filtered out. Below are the exact calculated factors that blocked your eligibility, along with actionable steps to improve your profile and qualify.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Specific Ineligibility Reasons */}
+            <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <ThumbsDown className="w-4.5 h-4.5 text-red-400" /> Specific Reasons Why No Loans Were Matched
+              </h3>
+              <div className="space-y-3">
+                {factors.map((factor, index) => (
+                  <div key={index} className="p-3.5 rounded-xl bg-slate-950 border border-red-950/60 text-xs text-red-300 leading-relaxed flex items-start gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+                    <span>{factor}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actionable Profile Improvement Guide */}
+            {suggestions.length > 0 && (
+              <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800">
+                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                  <Lightbulb className="w-4.5 h-4.5 text-teal-400 animate-pulse" /> Profile Improvement Roadmap (How to Qualify)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {suggestions.map((suggestion, index) => (
+                    <div key={index} className="p-4 rounded-xl bg-slate-950 border border-teal-950/60 text-xs text-teal-300/90 leading-relaxed flex items-start gap-2.5">
+                      <CheckCircle className="w-4 h-4 mt-0.5 text-teal-400 flex-shrink-0" />
+                      <span>{suggestion}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ask AI Advisor Call-To-Action */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-900/40 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div>
+                <h3 className="text-sm font-bold text-white">Need Customized Financial Advice?</h3>
+                <p className="text-xs text-slate-400 mt-1">Consult your personal AI Financial Advisor to discuss strategies for improving your CIBIL score or reducing monthly EMIs.</p>
+              </div>
+              <Link
+                href="/advisor"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all flex-shrink-0"
+              >
+                Chat with AI Advisor →
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-8">

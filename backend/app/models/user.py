@@ -13,4 +13,6 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     reset_token = Column(String, unique=True, index=True, nullable=True)
     reset_token_expires_at = Column(DateTime(timezone=True), nullable=True)
+    otp_code = Column(String, nullable=True)
+    otp_expires_at = Column(DateTime(timezone=True), nullable=True)
 

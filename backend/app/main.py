@@ -22,17 +22,26 @@ def on_startup():
     from sqlalchemy import text
     db = SessionLocal()
     try:
-        db.execute(text("SELECT reset_token, reset_token_expires_at FROM users LIMIT 1"))
+        db.execute(text("SELECT reset_token, reset_token_expires_at, otp_code, otp_expires_at FROM users LIMIT 1"))
     except Exception:
         db.rollback()
+        # Add reset_token columns if missing
         try:
             db.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR"))
             db.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME"))
             db.commit()
-            print("Successfully added password reset columns to users table.")
+        except Exception:
+            db.rollback()
+
+        # Add otp columns if missing
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN otp_code VARCHAR"))
+            db.execute(text("ALTER TABLE users ADD COLUMN otp_expires_at DATETIME"))
+            db.commit()
+            print("Successfully added OTP columns to users table.")
         except Exception as alter_err:
             db.rollback()
-            print(f"Failed to alter users table: {str(alter_err)}")
+            print(f"Failed to alter users table for OTP: {str(alter_err)}")
     finally:
         db.close()
         

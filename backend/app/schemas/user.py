@@ -28,6 +28,9 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
-    token: str
+    email: Optional[EmailStr] = None
+    token: Optional[str] = None
+    otp_code: Optional[str] = None
     password: str = Field(..., min_length=6)
+
 
