@@ -21,27 +21,59 @@ def on_startup():
     from app.database import SessionLocal
     from sqlalchemy import text
     db = SessionLocal()
+    
+    # 1. Add reset_token columns if missing
     try:
-        db.execute(text("SELECT reset_token, reset_token_expires_at, otp_code, otp_expires_at FROM users LIMIT 1"))
+        db.execute(text("SELECT reset_token FROM users LIMIT 1"))
     except Exception:
         db.rollback()
-        # Add reset_token columns if missing
         try:
             db.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR"))
-            db.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME"))
+            db.commit()
+        except Exception:
+            db.rollback()
+            
+    try:
+        db.execute(text("SELECT reset_token_expires_at FROM users LIMIT 1"))
+    except Exception:
+        db.rollback()
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires_at TIMESTAMP WITH TIME ZONE"))
+            db.commit()
+        except Exception:
+            db.rollback()
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME"))
+                db.commit()
+            except Exception:
+                db.rollback()
+
+    # 2. Add otp_code column if missing
+    try:
+        db.execute(text("SELECT otp_code FROM users LIMIT 1"))
+    except Exception:
+        db.rollback()
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN otp_code VARCHAR"))
             db.commit()
         except Exception:
             db.rollback()
 
-        # Add otp columns if missing
+    # 3. Add otp_expires_at column if missing
+    try:
+        db.execute(text("SELECT otp_expires_at FROM users LIMIT 1"))
+    except Exception:
+        db.rollback()
         try:
-            db.execute(text("ALTER TABLE users ADD COLUMN otp_code VARCHAR"))
-            db.execute(text("ALTER TABLE users ADD COLUMN otp_expires_at DATETIME"))
+            db.execute(text("ALTER TABLE users ADD COLUMN otp_expires_at TIMESTAMP WITH TIME ZONE"))
             db.commit()
-            print("Successfully added OTP columns to users table.")
-        except Exception as alter_err:
+        except Exception:
             db.rollback()
-            print(f"Failed to alter users table for OTP: {str(alter_err)}")
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN otp_expires_at DATETIME"))
+                db.commit()
+            except Exception:
+                db.rollback()
     finally:
         db.close()
         
@@ -55,6 +87,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from fastapi.responses import JSONResponse
+import logging
+
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception fallback to ensure CORS headers are attached even on 500 errors."""
+    logger.error(f"Global exception: {str(exc)}", exc_info=True)
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": f"Server Error: {str(exc)}"}
+    )
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # Route routing
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication"])
