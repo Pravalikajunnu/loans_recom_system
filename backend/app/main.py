@@ -48,10 +48,9 @@ def on_startup():
     seed_database()
 
 # CORS configuration
-# Allows requests from Next.js (usually http://localhost:3000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production to specify frontend domain
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
