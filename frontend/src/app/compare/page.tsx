@@ -100,11 +100,22 @@ export default function ComparePage() {
 
     const fetchCompareData = async () => {
       try {
+        const cached = sessionStorage.getItem("loan_analysis_cache");
+        const cachedProfile = sessionStorage.getItem("loan_profile_cache");
+
+        if (cached && cachedProfile) {
+          setAnalysis(JSON.parse(cached));
+          setProfile(JSON.parse(cachedProfile));
+          setLoading(false);
+        }
+
         const profileRes = await api.get<CustomerProfile>("/profile");
         setProfile(profileRes.data);
-        
+        sessionStorage.setItem("loan_profile_cache", JSON.stringify(profileRes.data));
+
         const matchingRes = await api.post<AnalysisResponse>("/matching/analyze");
         setAnalysis(matchingRes.data);
+        sessionStorage.setItem("loan_analysis_cache", JSON.stringify(matchingRes.data));
       } catch (err: any) {
         if (err.response?.status === 404) {
           setProfile(null);

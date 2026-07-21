@@ -32,13 +32,24 @@ export default function DashboardPage() {
 
     const fetchDashboardData = async () => {
       try {
+        const cached = sessionStorage.getItem("loan_analysis_cache");
+        const cachedProfile = sessionStorage.getItem("loan_profile_cache");
+
+        if (cached && cachedProfile) {
+          setAnalysis(JSON.parse(cached));
+          setProfile(JSON.parse(cachedProfile));
+          setLoading(false);
+        }
+
         // 1. Fetch user financial profile
         const profileRes = await api.get<CustomerProfile>("/profile");
         setProfile(profileRes.data);
+        sessionStorage.setItem("loan_profile_cache", JSON.stringify(profileRes.data));
         
         // 2. Fetch matched recommendation details
         const matchingRes = await api.post<AnalysisResponse>("/matching/analyze");
         setAnalysis(matchingRes.data);
+        sessionStorage.setItem("loan_analysis_cache", JSON.stringify(matchingRes.data));
       } catch (err: any) {
         if (err.response?.status === 404) {
           // Profile doesn't exist yet, we handle this state in UI

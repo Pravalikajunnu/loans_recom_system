@@ -196,6 +196,8 @@ export default function ProfileIntakePage() {
 
     try {
       await api.post("/profile", sanitizedProfile);
+      sessionStorage.removeItem("loan_analysis_cache");
+      sessionStorage.removeItem("loan_profile_cache");
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {

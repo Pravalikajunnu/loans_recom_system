@@ -210,17 +210,23 @@ def generate_loan_recommendations(
     """
     
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
-        
-        result_json = json.loads(response.text)
-        return result_json
-        
+        import concurrent.futures
+
+        def _call_gemini():
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            resp = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            return json.loads(resp.text)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_call_gemini)
+            result_json = future.result(timeout=2.5)
+            return result_json
+
     except Exception as e:
-        logger.error(f"Error calling Gemini API: {str(e)}. Falling back to mock recommendations.")
+        logger.error(f"Gemini API timeout or exception: {str(e)}. Using fast mock engine.")
         return get_mock_recommendation(profile_dict, matched_loans, all_loans)
 
 def get_mock_chat_response(profile_dict: Dict[str, Any], matched_loans: List[Dict[str, Any]], history: List[Dict[str, str]], question: str) -> str:
