@@ -248,7 +248,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Highlight Banner */}
+        {/* AI Highlight Banner (When Match Found) */}
         {bestLoan && (
           <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 to-purple-950/30 border border-indigo-900/40 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-2xl -mr-20 -mt-20" />
@@ -265,6 +265,50 @@ export default function DashboardPage() {
                   <span>Total Repay: <strong className="text-white">₹{bestLoan.total_repayment.toLocaleString()}</strong></span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ineligibility Banner (When No Matches Found) */}
+        {matchesCount === 0 && (
+          <div className="p-6 rounded-2xl bg-amber-950/30 border border-amber-900/50 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-base font-bold text-amber-200">No Matching Loans Found for Current Profile</h3>
+                <p className="text-xs text-amber-300/80 mt-1 leading-relaxed">
+                  Your metrics (CIBIL score: {profile.credit_score}, DTI ratio: {eligibility?.dti_ratio || 0}%) do not currently qualify for bank offers. Review the calculated factors below to improve your profile.
+                </p>
+              </div>
+            </div>
+
+            {analysis?.ai_recommendation?.eligibility_factors && (
+              <div className="pt-2 space-y-2">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Factors Blocking Eligibility:</p>
+                <div className="space-y-1.5">
+                  {analysis.ai_recommendation.eligibility_factors.map((factor, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-amber-200/90">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                      <span>{factor}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-3 flex flex-wrap gap-3">
+              <Link
+                href="/recommend"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer shadow-lg shadow-indigo-600/20"
+              >
+                View Full Profile Improvement Guide →
+              </Link>
+              <Link
+                href="/profile"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-all cursor-pointer"
+              >
+                Update Profile Financials
+              </Link>
             </div>
           </div>
         )}
